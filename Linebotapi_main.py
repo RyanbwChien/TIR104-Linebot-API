@@ -1,12 +1,15 @@
 
+import sys
 from flask import Flask, request, abort
 from linebot.models import MessageEvent, TextMessage, ImageMessage
 from linebot import LineBotApi, WebhookHandler
 from linebot.models import TextSendMessage
 import time
 from flask import Flask, request, jsonify
-from package import *          # 匯入處理器   
-from threading import Thread   
+from package import *          # 匯入處理器 
+from utils import *
+from threading import Thread
+# from pathlib import Path   
 # import inspect
 # import inspect
 # # 列出套件內的所有函數
@@ -29,10 +32,17 @@ link_msg = ["請直接輸入或轉貼要查詢是否為詐騙的訊息",
 
 app = Flask(__name__)
 
-def fetch_answer_and_reply(user_id, even, api_func):
+def time_fromat(timestamp):
+    return(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)))
+
+def fetch_answer_and_reply(user_id, event, api_func, sql_connect, table, columns, msgid, user_msg):
     # time.sleep(5)  # 模擬 API 請求延遲
-    answer = api_func(even)
+    answer = api_func(event)
     line_bot_api.push_message(user_id, TextSendMessage(text=answer))
+    formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+    msgid = msgid + "-1"
+    values = (msgid, user_id, user_msg, answer, formatted_time)
+    sql_connect.add_data_to_mysqltable(table, columns, values )
 
 @app.route("/webhook", methods=['POST'])
 def callback():
@@ -55,13 +65,31 @@ def even(event):
     profile = line_bot_api.get_profile(user_id)
     user_name = profile.display_name
     # 3. 獲取訊息發送時間
-    timestamp = event.timestamp / 1000.0
-    # formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
+    timestamp = event.timestamp/1000
+    formatted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
+    msgid = event.message.id
+
+
+    Line_Member_connect = MySQL_Insert_Data()
+    Line_Message_Log_connect = MySQL_Insert_Data()
+    try:
+        Line_Member_connect.add_data_to_mysqltable("Line_Member",("UserID", "Username", "Create_Time"),(user_id, user_name, formatted_time) )
+    except Exception as e:
+        print(e)
+    reply_sql_connect = Line_Message_Log_connect
+    table = "Line_Message_Log"
+    columns = ("MsgID", "UserID", "User_Msg", "Sys_Reply_Msg", "Create_Time")
+    
+
+
+
     if user_id not in user_states:
         user_states[user_id] = ""
     user_id = event.source.user_id
 
     msg = event.message.text
+    values = (msgid,user_id, msg, "",formatted_time)
+    Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values)
     print(msg)
 
     if msg in link_msg:
@@ -73,7 +101,12 @@ def even(event):
             reply = "內政部統計110年詐騙案件發生情形，依序為「假投資」、「解除分期付款」及「假網拍」3種手法最多"
             user_states[user_id] = "" 
             # return(TextMessage(text=reply))
+            values = (msgid + "-1",user_id, msg, reply,formatted_time)
+            Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values)
             line_bot_api.reply_message(event.reply_token, TextMessage(text=reply))
+
+
+
             return jsonify({"status": "ok"}), 200
         if msg == "請直接輸入或轉貼您要詢問的問題":
             user_states[user_id] = "模式4"
@@ -84,7 +117,9 @@ def even(event):
             # reply = Call_Bert_API(event)
             # reply = "回答模式1"
             user_states[user_id] = "" 
-            Thread(target=fetch_answer_and_reply, args=(user_id, event, Call_Bert_API)).start()
+            
+
+            Thread(target=fetch_answer_and_reply, args=(user_id, event, Call_Bert_API, reply_sql_connect, table, columns,msgid, msg)).start()
             # line_bot_api.push_message(user_id, TextSendMessage(text=reply))
             # line_bot_api.reply_message(event.reply_token, TextMessage(text=reply))
             return jsonify({"status": "ok"}), 200
@@ -93,7 +128,7 @@ def even(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請稍等，正在處理您的問題..."))
             user_states[user_id] = "" 
             # 使用 Thread 在背景執行 API 請求
-            Thread(target=fetch_answer_and_reply, args=(user_id, event,Call_RAG_API)).start()
+            Thread(target=fetch_answer_and_reply, args=(user_id, event,Call_RAG_API, reply_sql_connect, table, columns,msgid, msg)).start()
             # reply = Call_RAG_API(event)
             # # reply = "回答模式4"
             # user_states[user_id] = "" 
