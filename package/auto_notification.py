@@ -68,9 +68,9 @@ def auto_notification():
     # 獲取所有用戶 ID
     user_ids = get_user_id()
     # 推送訊息給每個用戶
-    # for user_id in user_ids:
-    #     push_message(user_id, MESSAGE, URL)
-    push_message('Ud08147e96cd51f385dca00d4348a6098', MESSAGE, URL)
+    for user_id in user_ids:
+        push_message(user_id, MESSAGE, URL)
+    
     
 
 # # 設定每週一的推播時間
