@@ -145,10 +145,10 @@ def even(event):
         if user_states[user_id] == "模式6":
             if msg == "請詳細描述您的問題":
                 user_states[user_id] = "模式6-1"
-
+                return jsonify({"status": "ok"}), 200 
             elif msg == "請詳細描述您的建議":
                 user_states[user_id] = "模式6-2"
-
+                return jsonify({"status": "ok"}), 200 
             else:
                 line_bot_api.reply_message(
                     event.reply_token,
