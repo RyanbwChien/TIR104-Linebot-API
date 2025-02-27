@@ -145,10 +145,10 @@ def even(event):
         if user_states[user_id] == "模式6":
             if msg == "請詳細描述您的問題":
                 user_states[user_id] = "模式6-1"
-                return jsonify({"status": "ok"}), 200
+
             elif msg == "請詳細描述您的建議":
                 user_states[user_id] = "模式6-2"
-                return jsonify({"status": "ok"}), 200
+
             else:
                 line_bot_api.reply_message(
                     event.reply_token,
@@ -160,7 +160,7 @@ def even(event):
                 event.reply_token,
                 TextMessage(text="謝謝您的問題反饋！我們已收到您的訊息並會儘快處理。"))
             
-            table = "`Member_Feedbacks`"
+            table = "Member_Feedbacks"
             columns = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
             values = (user_id, msg, "question", formatted_time)            
             Line_Member_Feedback.add_data_to_mysqltable(table, columns,values)
@@ -171,7 +171,7 @@ def even(event):
             line_bot_api.reply_message(
                 event.reply_token,
                 TextMessage(text="謝謝您的建議反饋！我們已收到您的訊息。"))
-            table = "`Member_Feedbacks`"
+            table = "Member_Feedbacks"
             columns = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
             values = (user_id, msg, "suggestion", formatted_time)            
             Line_Member_Feedback.add_data_to_mysqltable(table, columns,values)
