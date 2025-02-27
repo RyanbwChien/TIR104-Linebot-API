@@ -5,15 +5,15 @@ Created on Sat Feb  8 15:08:12 2025
 @author: user
 """
 import pymysql
-#my-secret-pw
+import os
 
 class MySQL_Insert_Data:
     def __init__(self, 
-                 host='35.201.141.125', 
+                 host=os.getenv('DB_HOST', 'localhost'), 
                  port=3306, 
-                 user='root', 
-                 password='my-secret-pw',
-                 database="Line_User"):
+                 user=os.getenv('DB_USER', 'root'), 
+                 password=os.getenv('DB_PASSWORD', 'password'),
+                 database=os.getenv('DB_NAME', 'linebot')):
         self.host = host
         self.port = port
         self.user = user
