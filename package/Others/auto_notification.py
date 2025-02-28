@@ -1,11 +1,11 @@
 from linebot import LineBotApi
-from linebot.models import TemplateSendMessage, ButtonsTemplate, URITemplateAction
+from linebot.models import TextSendMessage, TemplateSendMessage, ButtonsTemplate, URITemplateAction
 import requests
 import schedule
 import time
 import pymysql
 import os
-# from threading import Thread
+from threading import Thread
 
 # 設置你的 Channel Access Token
 CHANNEL_ACCESS_TOKEN = os.getenv('LINE_ACCESS_TOKEN')
@@ -16,7 +16,7 @@ def get_env_or_none(var_name, default=None):
 
 Line_push_unit = os.getenv('Line_push_unit', 'days')
 Line_push_interval = int(os.getenv('Line_push_interval', 1))
-Line_push_at = None if os.getenv('Line_push_at', None) == 'None' else os.getenv('Line_push_at', None)
+Line_push_at = None if os.getenv('Line_push_at', None) == 'None' else str(os.getenv('Line_push_at', None))
 
 def get_user_id():
     db = pymysql.connect(
@@ -68,9 +68,9 @@ def auto_notification():
     # 獲取所有用戶 ID
     user_ids = get_user_id()
     # 推送訊息給每個用戶
-    for user_id in user_ids:
-        push_message(user_id, MESSAGE, URL)
-    
+    # for user_id in user_ids:
+    #     push_message(user_id, MESSAGE, URL)
+    push_message('Ud08147e96cd51f385dca00d4348a6098', MESSAGE, URL)
     
 
 # # 設定每週一的推播時間
@@ -80,7 +80,7 @@ def auto_notification():
 
 def schedule_task(unit=Line_push_unit, interval=Line_push_interval, at=Line_push_at):
     if at:
-        exec(f'schedule.every({interval}).{unit}.at({at}).do(auto_notification)')
+        exec(f'schedule.every({interval}).{unit}.at("{at}").do(auto_notification)')
     else:
         exec(f'schedule.every({interval}).{unit}.do(auto_notification)')
     return None
@@ -94,13 +94,13 @@ def run_scheduler():
 # schedule_task(unit=Line_push_unit, interval=Line_push_interval, at=Line_push_at)
 
 # 每分鐘檢查一次是否有排程的任務需要執行
-# if __name__ == '__main__':
+if __name__ == '__main__':
     # job = schedule_task(interval=None, unit='minutes', at=None)
     # job.do(auto_notification)
     # while True:
     #     schedule.run_pending()
     #     time.sleep(1)
-    # scheduler_thread = Thread(target=run_scheduler, daemon=True)
-    # scheduler_thread.start()
+    scheduler_thread = Thread(target=run_scheduler, daemon=True)
+    scheduler_thread.start()
     
 
