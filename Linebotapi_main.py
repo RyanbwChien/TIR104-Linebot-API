@@ -123,7 +123,7 @@ def even(event):
             buttons_template = TemplateSendMessage(
                 alt_text='請選擇查詢類別',
                 template=ButtonsTemplate(
-                    thumbnail_image_url='https://steam.oxxostudio.tw/download/python/line-template-message-demo.jpg',
+                    thumbnail_image_url='https://i.imgur.com/tiDxq31.jpg',
                     title='請選擇欲查詢類別',
                     text='請點選一個選項',
                     actions=[
@@ -260,4 +260,4 @@ def even(event):
 if __name__ == "__main__":
     # scheduler_thread = Thread(target=run_scheduler, daemon=True)
     # scheduler_thread.start()
-    app.run() #host='0.0.0.0', port=8080
+    app.run(host='0.0.0.0', port=8080) #host='0.0.0.0', port=8080
