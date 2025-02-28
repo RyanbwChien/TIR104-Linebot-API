@@ -90,7 +90,7 @@ def even(event):
     
     
     
-    Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values)
+    Line_Message_Log_connect.add_data_to_mysqltable("Line_Message_Log", columns,values)
     
     Line_Member_Feedback = MySQL_Insert_Data()
     
@@ -110,7 +110,7 @@ def even(event):
             user_states[user_id] = "" 
             # return(TextMessage(text=reply))
             values = (msgid + "-1",user_id, msg, reply,formatted_time)
-            Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values)
+            Line_Message_Log_connect.add_data_to_mysqltable("Line_Message_Log", columns,values)
             # line_bot_api.reply_message(event.reply_token, TextMessage(text=reply))
 
             line_bot_api.reply_message(event.reply_token, flex_message)
@@ -172,7 +172,7 @@ def even(event):
             # reply = Call_Bert_API(event)
             # reply = "回答模式1"
             user_states[user_id] = ""
-            Thread(target=fetch_answer_and_reply, args=(user_id, event, Call_Bert_API, reply_sql_connect, table, columns,msgid, msg)).start()
+            Thread(target=fetch_answer_and_reply, args=(user_id, event, Call_Bert_API, reply_sql_connect, "Line_Message_Log", columns,msgid, msg)).start()
             return jsonify({"status": "ok"}), 200
         
         if user_states[user_id] == "模式2":
@@ -196,7 +196,7 @@ def even(event):
             line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請稍等，正在處理您的問題..."))
             user_states[user_id] = "" 
             # 使用 Thread 在背景執行 API 請求
-            Thread(target=fetch_answer_and_reply, args=(user_id, event,Call_RAG_API, reply_sql_connect, table, columns,msgid, msg)).start()
+            Thread(target=fetch_answer_and_reply, args=(user_id, event,Call_RAG_API, reply_sql_connect, "Line_Message_Log", columns,msgid, msg)).start()
             return jsonify({"status": "ok"}), 200
         
         if user_states[user_id] == "模式6":
@@ -218,23 +218,26 @@ def even(event):
                 event.reply_token,
                 TextMessage(text=reply))
             values_Log = (msgid + "-1",user_id, msg, reply,formatted_time)
-            Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values_Log)
+            Line_Message_Log_connect.add_data_to_mysqltable("Line_Message_Log", columns,values_Log)
             
-            table = "Member_Feedbacks"
-            columns = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
-            values = (user_id, msg, "question", formatted_time)            
-            Line_Member_Feedback.add_data_to_mysqltable(table, columns,values)
+            columns2 = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
+            values2 = (user_id, msg, "question", formatted_time)            
+            Line_Member_Feedback.add_data_to_mysqltable("Member_Feedbacks", columns2,values2)
             return jsonify({"status": "ok"}), 200    
                 
         if user_states[user_id] == "模式6-2":
             user_states[user_id] = ""
+            reply = "謝謝您的建議反饋！我們已收到您的訊息。"
             line_bot_api.reply_message(
                 event.reply_token,
-                TextMessage(text="謝謝您的建議反饋！我們已收到您的訊息。"))
-            table = "Member_Feedbacks"
-            columns = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
-            values = (user_id, msg, "suggestion", formatted_time)            
-            Line_Member_Feedback.add_data_to_mysqltable(table, columns,values)
+                TextMessage(text=reply))
+            values_Log = (msgid + "-1",user_id, msg, reply,formatted_time)
+            Line_Message_Log_connect.add_data_to_mysqltable("Line_Message_Log", columns,values_Log)
+            
+            
+            columns2 = ("UserID", "UserMessage", "FeedbackType", "MessageTime")            
+            values2 = (user_id, msg, "suggestion", formatted_time)            
+            Line_Member_Feedback.add_data_to_mysqltable("Member_Feedbacks", columns2,values2)
             return jsonify({"status": "ok"}), 200      
 
         if user_states[user_id] in ["模式2-1_line", "模式2-2_Tel", "模式2-3_url"]:
@@ -251,7 +254,7 @@ def even(event):
                 TextMessage(text=reply))
             user_states[user_id] = ""
             values = (msgid + "-1",user_id, msg, reply,formatted_time)
-            Line_Message_Log_connect.add_data_to_mysqltable(table, columns,values)
+            Line_Message_Log_connect.add_data_to_mysqltable("Line_Message_Log", columns,values)
             return jsonify({"status": "ok"}), 200      
         
         
@@ -260,4 +263,4 @@ def even(event):
 if __name__ == "__main__":
     # scheduler_thread = Thread(target=run_scheduler, daemon=True)
     # scheduler_thread.start()
-    app.run(host='0.0.0.0', port=8080) #host='0.0.0.0', port=8080
+    app.run() #host='0.0.0.0', port=8080
